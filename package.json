@@ -1,0 +1,53 @@
+{
+  "name": "blockly-proceds",
+  "version": "1.0.0",
+  "description": "A Blockly plugin.",
+  "scripts": {
+    "audit:fix": "blockly-scripts auditFix",
+    "build": "blockly-scripts build",
+    "clean": "blockly-scripts clean",
+    "lint": "blockly-scripts lint",
+    "predeploy": "blockly-scripts predeploy",
+    "start": "blockly-scripts start",
+    "test": "blockly-scripts test"
+  },
+  "main": "./dist/index.js",
+  "module": "./src/index.js",
+  "unpkg": "./dist/index.js",
+  "author": "",
+  "keywords": [
+    "blockly",
+    "blockly-plugin",
+    "my-plugin"
+  ],
+  "homepage": "git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
+  "bugs": {
+    "url": "git@github.com:Program-AR/blockly-proceds/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Program-AR/blockly-proceds.git",
+    "directory": "my-plugin"
+  },
+  "license": "Apache-2.0",
+  "directories": {
+    "dist": "dist",
+    "src": "src"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "blockly": "^11.1.1",
+    "@blockly/dev-scripts": "^4.0.1",
+    "@blockly/dev-tools": "^8.0.2"
+  },
+  "peerDependencies": {
+    "blockly": "^11.1.1"
+  },
+  "publishConfig": {},
+  "eslintConfig": {
+    "extends": "@blockly/eslint-config"
+  }
+}
