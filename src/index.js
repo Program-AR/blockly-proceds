@@ -1,19 +1,7 @@
-/**
- * @license
- * Copyright 2023 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
+import 'blockly/blocks';
+import * as Blockly from 'blockly/core'
 
-// TODO: Edit plugin overview.
-/**
- * @fileoverview Plugin overview.
- */
-
-// TODO: Rename plugin and edit plugin description.
-/**
- * Plugin description.
- */
-export class Plugin {
+export class BlocklyProceds {
   /**
    * Constructor for ...
    * @param {!Blockly.WorkspaceSvg} workspace The workspace that the plugin will
@@ -73,8 +61,8 @@ export class Plugin {
       16,
       16,
       Blockly.Msg.PROCEDURES_ADD_PARAMETER,
-      function () { /*addParameter(block, 0, nameField)*/ }
-    );
+      function () { this.addParameter(block) }
+    )
 
     var input = block.appendDummyInput()
       .appendField(title)
@@ -117,25 +105,22 @@ export class Plugin {
   }
 
 
-  addParameter = function (self) {
-    var argsAmount = self.getVars()
-    var defaultName = Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
-    var name = this.getAvailableName(self, defaultName);
-    var id = "INPUTARG" + argsAmount;
+  addParameter = (self) => {
+    const argsAmount = self.getVars()
+    const defaultName = Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
+    const name = this.getAvailableName(self, defaultName);
+    const id = "INPUTARG" + argsAmount;
 
-    /*     if (index === undefined) {
-          self.arguments_.push(name);
-          self.updateParams_();
-      
-          var blocks = self.workspace.getAllBlocks();
-          for (block of blocks)
-            if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
-              block.arguments_.push(name);
-              block.updateShape_();
-            }
-        } */
+    self.arguments_.push(name);
+    self.updateParams_();
 
-    var createCallButton = new Blockly.FieldImage(
+    const callers = Blockly.Procedures.getCallers(self.getProcedureDef()[0], self.workspace);
+    callers.forEach(caller => {
+      caller.arguments_.push(name);
+      caller.updateShape_()
+    })
+
+    const createCallButton = new Blockly.FieldImage(
       ProcedsBlockly.HAND,
       16,
       16,
@@ -145,7 +130,7 @@ export class Plugin {
       }
     );
 
-    var removeParameterButton = new Blockly.FieldImage(
+    const removeParameterButton = new Blockly.FieldImage(
       ProcedsBlockly.MINUS,
       16,
       16,
@@ -167,15 +152,14 @@ export class Plugin {
       }
     );
 
-    var nameField = new Blockly.FieldTextInput(name, function (newName) {
-      var oldName = self.getVars()[argsAmount];
+    const nameField = new Blockly.FieldTextInput(name, function (newName) {
+      const oldName = self.getVars()[argsAmount];
 
       if (oldName !== newName)
         newName = getAvailableName(self, newName);
 
       self.arguments_[argsAmount] = newName;
 
-      var callers = Blockly.Procedures.getCallers(self.getProcedureDef()[0], self.workspace);
       callers.forEach(caller => {
         caller.arguments_ = caller.arguments_.map(argName => argName === oldName ? newName : argName)
         caller.updateShape_()
