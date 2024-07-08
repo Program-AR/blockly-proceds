@@ -1,5 +1,4 @@
 import 'blockly/blocks';
-import * as Blockly from 'blockly/core'
 
 const PLUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2DtAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQfhDAUCCjFLV0NqAAAC60lEQVR42u3dQW7aQABA0Wl7MMjJICeDnIwuqm4qVQrYjMH/Pa/jsfFnTJDwjAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMBUP7Y+gClOY4zznX9zHmN8bn3gLHcYtwXbYevDZ5nLost/G7dx2foUeNzyyy+BN7Zs8ncjeHvrvP/NAW9qvff/rueAn1sfwNMcX3hvL2S/3wPcVt7fTl+p/c4AfIsA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4mYHcBinVRdz+v+2tjlHfdrv8lRjHFZcyG3P22VmBPOWQrrsd+WtJ7iOjzkDzQrA5b/XpATmBHAY1ynj7MtxfD1/kDkBrP+RrGHC1ZnxX8Bpwhj7NOGV8z1A3IxbgBvA455+fcwAcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcT9mjLKcevTfFPn5/860AwQ58ehr2wnPw51C3jMccYgcwL48nyAu11nPB3AI2Je1bRHxMz7EPgxjuaBb7mO46zLP3MG+OMwjuM8ecx3cp419f81O4B51v7PY6evlO8B4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQJ4A4AcQJIE4AcQKIE0CcAOIEECeAOAHECSBOAHECiBNAnADiBBAngDgBxAkgTgBxAogTQJwA4gQQN2fp2G0cV9zXhEVct7HfGeD6wntjisu4rbRdtj4VHnFYLYDD1qfCY9aZA7z/39jyBFz+N7fsRrD7yX+n62H+4zTG3QvWnscYn1sfOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALvzG8Ijm7EmMQYoAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTEyLTA1VDAyOjEwOjQ5LTA1OjAwJa2zowAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0xMi0wNVQwMjoxMDo0OS0wNTowMFTwCx8AAAAASUVORK5CYII="
 const MINUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2DtAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQfhDAUCCi+xWH4JAAABcUlEQVR42u3c7ZGCMBSG0etuYcTKls7AyrSEVWd4+bjnUECMeSbhD6kCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBzu4XHm2rUvPekD2yutR57/4itTLXU0/Pvs9SUW5TcDrDUyE3r9Na6ZwZKBWD5PxVKIBPAVGtknGsZibeBTADPyCjXE1idn8A0/gJjXFPgn0sEwIEljgAHwPc2Xx87QHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNDcb2SUsfc0T2re/utAO0BzPg49sot8HOoI+M5IDJIJ4OF+gI+F7gpyRcwxxa6Iyb0E3mvYB96y1kgtv2vijubS18QBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAWXq7xrTQhKAi3AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTEyLTA1VDAyOjEwOjQ3LTA1OjAwdZLI/gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0xMi0wNVQwMjoxMDo0Ny0wNTowMATPcEIAAAAASUVORK5CYII="
@@ -9,7 +8,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
 
   Blockly.Blocks['procedures_defnoreturn'] = {
     init: function () {
-      makeProcedureInit(this,
+      makeProcedureInit(Blockly, this,
         true,
         Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE,
         Blockly.Msg.PROCEDURES_DEFNORETURN_TITLE,
@@ -27,6 +26,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
 }
 
 const makeProcedureInit = (
+  Blockly,
   block,
   withParameters = false,
   defaultName,
@@ -46,7 +46,7 @@ const makeProcedureInit = (
     16,
     16,
     Blockly.Msg.PROCEDURES_ADD_PARAMETER,
-    () => addParameter(block)
+    () => addParameter(block, Blockly)
   )
 
   var input = block.appendDummyInput()
@@ -54,7 +54,7 @@ const makeProcedureInit = (
     .appendField(nameField, 'NAME')
     .appendField('', 'PARAMS')
 
-  block.appendStatementInput("DO").setCheck(null)
+  block.appendStatementInput("STACK").setCheck(null)
 
   if (withParameters)
     input.appendField(addParameterButton);
@@ -89,7 +89,7 @@ const getAvailableName = (block, name) => {
   return isTaken ? getAvailableName(block, name + "_") : name
 }
 
-const addParameter = (self) => {
+const addParameter = (self, Blockly) => {
   const argsAmount = self.arguments_.length
   const defaultName = Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
   const name = getAvailableName(self, defaultName);
@@ -98,12 +98,11 @@ const addParameter = (self) => {
   self.arguments_.push(name);
   //self.updateParams_();
 
-
-  /*     const callers = Blockly.Procedures.getCallers(self.getProcedureDef()[0], self.workspace);
-      callers.forEach(caller => {
-        caller.arguments_.push(name);
-        caller.updateShape_()
-      }) */
+/*   const callers = Blockly.Procedures.getCallers(self.()[0], self.workspace);
+  callers.forEach(caller => {
+    caller.arguments_.push(name);
+    caller.updateShape_()
+  }) */
 
   const createCallButton = new Blockly.FieldImage(
     HAND,
@@ -155,7 +154,7 @@ const addParameter = (self) => {
     .appendField(createCallButton)
     .appendField(removeParameterButton);
 
- // self.moveInputBefore(id, 'STACK');
+  self.moveInputBefore(id, 'STACK');
 
 }
 
