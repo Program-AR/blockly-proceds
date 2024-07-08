@@ -5,6 +5,31 @@ const MINUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2D
 const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfiBAUBKBeKSgeBAAABTElEQVQoz22QzyvDcRjHX5/vvrMyStI2uZgftdVCSpJCyW1y00oUF+Xg4OIkx5VyUyJOsgv/gnJw4YCSSFMyB5pGbLJ99/k8LltreB2f9+v50eOigoc5FvGTJF8pugCwaKaNaE98uf9zMBXwjtNpbvmuaH2B0+HXuuyMEbOlQ4U1M5ZVcYbowg02YfZW5cnE9JIROdI7jsiOacoMPLZdEYPR1ouQkxCRG+feESlIXkQOzLR+NhvCpc3UbPcHAoRsADcAQ0Twq0ZosQgEVY0SqvGpkAUCxkIUYRP4bZRRNi9pvaD+TwXyFseHuYzy/Kt8CWfQ5Ems6C/5y7uZyDEH0Nt8vq0dUx0XzaapPyIIoIi23+47+SrlTvrTjLhKy2wmO95OqiacS+QBH9gAFDlOZnYbrimWOixSZCwUlK+vZd7bXiPldyi0yqX1OtkfCBS/9XAtDKAAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDQtMDVUMDQ6NDQ6NDItMDM6MDD+uUN1AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTA0LTA1VDA0OjQwOjIzLTAzOjAw5hdZgAAAAABJRU5ErkJggg=="
 
 export const ProcedsBlocklyInit = (Blockly) => {
+  Blockly.ContextMenu.callbackFactory = function (block, xml) {
+    return function () {
+      Blockly.Events.disable();
+      try {
+        var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+        // Move the new block next to the old block.
+        var xy = block.getRelativeToSurfaceXY();
+        if (block.RTL) {
+          xy.x -= Blockly.SNAP_RADIUS;
+        } else {
+          xy.x += Blockly.SNAP_RADIUS;
+        }
+        xy.y += Blockly.SNAP_RADIUS * 2;
+        newBlock.moveBy(xy.x, xy.y);
+      } finally {
+        Blockly.Events.enable();
+      }
+      if (Blockly.Events.isEnabled() && !newBlock.isShadow()) {
+        Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
+      }
+      newBlock.select();
+
+      return newBlock; // [!]
+    };
+  };
 
   Blockly.Blocks['procedures_defnoreturn'] = {
     init: function () {
@@ -78,9 +103,8 @@ const makeProcedureInit = (
     16,
     16,
     "",
-    function () {
-    }
-  );
+    () => createCall(block, Blockly))
+
   input.appendField(createCallButton);
 };
 
@@ -98,11 +122,11 @@ const addParameter = (self, Blockly) => {
   self.arguments_.push(name);
   //self.updateParams_();
 
-/*   const callers = Blockly.Procedures.getCallers(self.()[0], self.workspace);
+  const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
   callers.forEach(caller => {
     caller.arguments_.push(name);
     caller.updateShape_()
-  }) */
+  })
 
   const createCallButton = new Blockly.FieldImage(
     HAND,
@@ -119,8 +143,7 @@ const addParameter = (self, Blockly) => {
     16,
     16,
     Blockly.Msg.PROCEDURES_REMOVE_PARAMETER,
-    function () {
-    }
+    () => removeParameter(self, argsAmount, Blockly)
   );
 
   const nameField = new Blockly.FieldTextInput(name, function (newName) {
@@ -136,13 +159,15 @@ const addParameter = (self, Blockly) => {
       caller.updateShape_()
     })
 
-    const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
-    varBlocks.forEach(varBlock => {
-      var varField = varBlock.getField("VAR");
-      if (varField.getValue() === oldName) {
-        varField.setValue(newName);
-      }
-    })
+    /*     }
+    TODO
+        const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
+        varBlocks.forEach(varBlock => {
+          var varField = varBlock.getField("VAR");
+          if (varField.getValue() === oldName) {
+            varField.setValue(newName);
+          }
+        }) */
 
     return newName;
   });
@@ -155,6 +180,62 @@ const addParameter = (self, Blockly) => {
     .appendField(removeParameterButton);
 
   self.moveInputBefore(id, 'STACK');
+
+}
+
+const removeParameter = (self, argsAmount, Blockly) => {
+  self.removeInput("INPUTARG" + argsAmount);
+  self.arguments_.splice(argsAmount, 1);
+
+  const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
+  callers.forEach(block => {  
+    block.arguments_.splice(argsAmount, 1);
+    block.updateShape_();
+  })
+
+}
+
+
+const createCall = (self, Blockly) => {
+  console.log("create call")
+  /*   
+  TODO
+  var name = self.getFieldValue('NAME');
+    console.log(name);
+    
+    // Crear el elemento de mutación usando el DOM nativo
+    var xmlMutation = document.createElement('mutation');
+    xmlMutation.setAttribute('name', name);
+    
+    // Agregar argumentos al elemento de mutación
+    for (var i = 0; i < self.arguments_.length; i++) {
+      var xmlArg = document.createElement('arg');
+      xmlArg.setAttribute('name', self.arguments_[i]);
+      xmlMutation.appendChild(xmlArg);
+    }
+    
+    // Crear el bloque XML usando el DOM nativo
+    var xmlBlock = document.createElement('block');
+    xmlBlock.setAttribute('type', self.callType_);
+    xmlBlock.appendChild(xmlMutation);
+    
+    // Crear el bloque Blockly a partir del bloque XML
+    const block = Blockly.ContextMenu.callbackFactory(self, xmlBlock)();
+    
+    try {
+      const procedureBlock = self;
+    
+      Blockly.Events.disabled_ = 1;
+      const posParent = procedureBlock.getRelativeToSurfaceXY();
+      const pos = block.getRelativeToSurfaceXY();
+      let width = procedureBlock.width;
+      const returnBlock = procedureBlock.inputList.find((it) => it.name === "RETURN");
+      if (returnBlock) width -= returnBlock.renderWidth - 8;
+    
+      block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+    } finally {
+      Blockly.Events.disabled_ = 0;
+    } */
 
 }
 
