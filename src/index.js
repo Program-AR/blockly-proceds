@@ -5,31 +5,6 @@ const MINUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2D
 const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfiBAUBKBeKSgeBAAABTElEQVQoz22QzyvDcRjHX5/vvrMyStI2uZgftdVCSpJCyW1y00oUF+Xg4OIkx5VyUyJOsgv/gnJw4YCSSFMyB5pGbLJ99/k8LltreB2f9+v50eOigoc5FvGTJF8pugCwaKaNaE98uf9zMBXwjtNpbvmuaH2B0+HXuuyMEbOlQ4U1M5ZVcYbowg02YfZW5cnE9JIROdI7jsiOacoMPLZdEYPR1ouQkxCRG+feESlIXkQOzLR+NhvCpc3UbPcHAoRsADcAQ0Twq0ZosQgEVY0SqvGpkAUCxkIUYRP4bZRRNi9pvaD+TwXyFseHuYzy/Kt8CWfQ5Ems6C/5y7uZyDEH0Nt8vq0dUx0XzaapPyIIoIi23+47+SrlTvrTjLhKy2wmO95OqiacS+QBH9gAFDlOZnYbrimWOixSZCwUlK+vZd7bXiPldyi0yqX1OtkfCBS/9XAtDKAAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDQtMDVUMDQ6NDQ6NDItMDM6MDD+uUN1AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTA0LTA1VDA0OjQwOjIzLTAzOjAw5hdZgAAAAABJRU5ErkJggg=="
 
 export const ProcedsBlocklyInit = (Blockly) => {
-  Blockly.ContextMenu.callbackFactory = function (block, xml) {
-    return function () {
-      Blockly.Events.disable();
-      try {
-        var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
-        // Move the new block next to the old block.
-        var xy = block.getRelativeToSurfaceXY();
-        if (block.RTL) {
-          xy.x -= Blockly.SNAP_RADIUS;
-        } else {
-          xy.x += Blockly.SNAP_RADIUS;
-        }
-        xy.y += Blockly.SNAP_RADIUS * 2;
-        newBlock.moveBy(xy.x, xy.y);
-      } finally {
-        Blockly.Events.enable();
-      }
-      if (Blockly.Events.isEnabled() && !newBlock.isShadow()) {
-        Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
-      }
-      newBlock.select();
-
-      return newBlock; // [!]
-    };
-  };
 
   Blockly.Blocks['procedures_defnoreturn'] = {
     init: function () {
@@ -42,9 +17,8 @@ export const ProcedsBlocklyInit = (Blockly) => {
         Blockly.Msg.PROCEDURES_DEFNORETURN_HELPURL
       )
     },
-
-    /*     customContextMenu: makeProcedureCustomMenu(),
-        updateParams_: makeUpdateParams(),
+    updateParams_: () => { },
+    /* customContextMenu: makeProcedureCustomMenu(),
         domToMutation: makeProcedureDomToMutation(), */
   };
 
@@ -61,6 +35,7 @@ const makeProcedureInit = (
   helpUrl,
 ) => {
 
+  console.log(Blockly.Procedures.isNameUsed(defaultName, block.workspace))
   var defaultLegalName = Blockly.Procedures.findLegalName(defaultName, block);
   var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
   nameField.setSpellcheck(false);
@@ -71,7 +46,7 @@ const makeProcedureInit = (
     16,
     16,
     Blockly.Msg.PROCEDURES_ADD_PARAMETER,
-    () => addParameter(block, Blockly)
+    () => addParameter(block, Blockly, undefined)
   )
 
   var input = block.appendDummyInput()
@@ -113,9 +88,9 @@ const getAvailableName = (block, name) => {
   return isTaken ? getAvailableName(block, name + "_") : name
 }
 
-const addParameter = (self, Blockly) => {
+const addParameter = (self, Blockly, argName) => {
   const argsAmount = self.arguments_.length
-  const defaultName = Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
+  const defaultName = argName || Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
   const name = getAvailableName(self, defaultName);
   const id = "INPUTARG" + argsAmount;
 
@@ -184,11 +159,15 @@ const addParameter = (self, Blockly) => {
 }
 
 const removeParameter = (self, argsAmount, Blockly) => {
-  self.removeInput("INPUTARG" + argsAmount);
-  self.arguments_.splice(argsAmount, 1);
+  let arguments_ = self.arguments_
+  self.arguments_.forEach((_, i) => self.removeInput("INPUTARG" + i))
+  self.arguments_ = []
+  arguments_.splice(argsAmount, 1)
+
+  arguments_.forEach(arg => addParameter(self, Blockly, arg))
 
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
-  callers.forEach(block => {  
+  callers.forEach(block => {
     block.arguments_.splice(argsAmount, 1);
     block.updateShape_();
   })
