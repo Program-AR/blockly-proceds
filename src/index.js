@@ -24,6 +24,17 @@ export const ProcedsBlocklyInit = (Blockly) => {
 
 }
 
+export const allProcedures = (workspace) => workspace.getAllBlocks().filter(isProcedure)
+
+const getName = (procedureBlock) => procedureBlock.getFieldValue('NAME')
+
+const isProcedure = (block) => block.type === 'Procedimiento'
+
+export const allProcedureNames = (workspace) => allProcedures(workspace).map(getName)
+
+//TODO no anda
+const findLegalName = (name, block, index) => allProcedureNames(block.workspace).includes(name) ? findLegalName(name + " " + index, block, index + 1) : name
+
 const makeProcedureInit = (
   Blockly,
   block,
@@ -35,8 +46,7 @@ const makeProcedureInit = (
   helpUrl,
 ) => {
 
-  console.log(Blockly.Procedures.isNameUsed(defaultName, block.workspace))
-  var defaultLegalName = Blockly.Procedures.findLegalName(defaultName, block);
+  var defaultLegalName = findLegalName(defaultName, block, 1);
   var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
   nameField.setSpellcheck(false);
 
@@ -108,10 +118,8 @@ const addParameter = (self, Blockly, argName) => {
     16,
     16,
     Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name),
-    function () {
-      // createParameterCaller(self, self.getVars()[argsAmount])();
-    }
-  );
+    () => createParameterCaller(self, self.getVars()[argsAmount])()
+  )
 
   const removeParameterButton = new Blockly.FieldImage(
     MINUS,
@@ -119,7 +127,7 @@ const addParameter = (self, Blockly, argName) => {
     16,
     Blockly.Msg.PROCEDURES_REMOVE_PARAMETER,
     () => removeParameter(self, argsAmount, Blockly)
-  );
+  )
 
   const nameField = new Blockly.FieldTextInput(name, function (newName) {
     const oldName = self.arguments_[argsAmount];
@@ -135,7 +143,7 @@ const addParameter = (self, Blockly, argName) => {
     })
 
     /*     }
-    TODO
+    TODO: this changes the argument blocks when the name of the argument changes
         const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
         varBlocks.forEach(varBlock => {
           var varField = varBlock.getField("VAR");
@@ -177,44 +185,8 @@ const removeParameter = (self, argsAmount, Blockly) => {
 
 const createCall = (self, Blockly) => {
   console.log("create call")
-  /*   
-  TODO
-  var name = self.getFieldValue('NAME');
-    console.log(name);
-    
-    // Crear el elemento de mutación usando el DOM nativo
-    var xmlMutation = document.createElement('mutation');
-    xmlMutation.setAttribute('name', name);
-    
-    // Agregar argumentos al elemento de mutación
-    for (var i = 0; i < self.arguments_.length; i++) {
-      var xmlArg = document.createElement('arg');
-      xmlArg.setAttribute('name', self.arguments_[i]);
-      xmlMutation.appendChild(xmlArg);
-    }
-    
-    // Crear el bloque XML usando el DOM nativo
-    var xmlBlock = document.createElement('block');
-    xmlBlock.setAttribute('type', self.callType_);
-    xmlBlock.appendChild(xmlMutation);
-    
-    // Crear el bloque Blockly a partir del bloque XML
-    const block = Blockly.ContextMenu.callbackFactory(self, xmlBlock)();
-    
-    try {
-      const procedureBlock = self;
-    
-      Blockly.Events.disabled_ = 1;
-      const posParent = procedureBlock.getRelativeToSurfaceXY();
-      const pos = block.getRelativeToSurfaceXY();
-      let width = procedureBlock.width;
-      const returnBlock = procedureBlock.inputList.find((it) => it.name === "RETURN");
-      if (returnBlock) width -= returnBlock.renderWidth - 8;
-    
-      block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
-    } finally {
-      Blockly.Events.disabled_ = 0;
-    } */
-
 }
 
+const createParameterCaller = (procedureBlock, name) => {
+  console.log("create parameter call")
+}
