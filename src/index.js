@@ -118,7 +118,7 @@ const addParameter = (self, Blockly, argName) => {
     16,
     16,
     Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name),
-    () => createParameterCaller(self, self.getVars()[argsAmount])()
+    () => createParameterCaller(self, self.arguments_[argsAmount], Blockly)
   )
 
   const removeParameterButton = new Blockly.FieldImage(
@@ -184,9 +184,86 @@ const removeParameter = (self, argsAmount, Blockly) => {
 
 
 const createCall = (self, Blockly) => {
-  console.log("create call")
+  /*   var name = self.getFieldValue('NAME');
+    var xmlMutation = document.createElement('mutation');
+    xmlMutation.setAttribute('name', name);
+  
+    self.arguments_.forEach((_, i) => {
+      var xmlArg = document.createElement('arg');
+      xmlArg.setAttribute('name', self.arguments_[i]);
+      xmlMutation.appendChild(xmlArg);
+    })
+  
+    var xmlBlock = document.createElement('block');
+    xmlBlock.appendChild(xmlMutation);
+  
+    xmlBlock.setAttribute('type', 'procedures_callnoreturn');
+  
+    console.log(Blockly.Xml.domToPrettyText(xmlBlock))
+  
+    callbackFactory(self, xmlBlock, Blockly)
+  
+     try {
+      const procedureBlock = self;
+  
+      Blockly.Events.disabled_ = 1;
+      const posParent = procedureBlock.getRelativeToSurfaceXY();
+      const pos = block.getRelativeToSurfaceXY();
+      let width = procedureBlock.width;
+  
+      block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+    } finally {
+      Blockly.Events.disabled_ = 0;
+    }  */
 }
 
-const createParameterCaller = (procedureBlock, name) => {
-  console.log("create parameter call")
+const callbackFactory = (block, xml, Blockly) => {
+  Blockly.Events.disable();
+  try {
+    var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+    console.log(newBlock)
+    // Move the new block next to the old block.
+    var xy = block.getRelativeToSurfaceXY();
+    if (block.RTL) {
+      xy.x -= Blockly.SNAP_RADIUS;
+    } else {
+      xy.x += Blockly.SNAP_RADIUS;
+    }
+    xy.y += Blockly.SNAP_RADIUS * 2;
+    newBlock.moveBy(xy.x, xy.y);
+  } finally {
+    Blockly.Events.enable();
+  }
+  if (Blockly.Events.isEnabled() && !newBlock.isShadow()) {
+    Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
+  }
+  newBlock.select();
+
+  return newBlock; // [!]
+};
+
+const createParameterCaller = (procedureBlock, name, Blockly) => {
+  var xmlField = document.createElement('field')
+  xmlField.textContent = name;
+  xmlField.setAttribute('name', 'VAR')
+  var xmlBlock = document.createElement('block')
+  xmlBlock.appendChild(xmlField)
+  xmlBlock.setAttribute('type', 'variables_get')
+
+  var block = callbackFactory(procedureBlock, xmlBlock, Blockly);
+  block.$parent = procedureBlock.id;
+  console.log(block)
+
+  try {
+    Blockly.Events.disabled_ = 1;
+    const posParent = procedureBlock.getRelativeToSurfaceXY();
+    console.log(posParent)
+    const pos = block.getRelativeToSurfaceXY();
+    let width = procedureBlock.width;
+
+    block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+  } finally {
+    Blockly.Events.disabled_ = 0;
+  }
+
 }
