@@ -22,6 +22,19 @@ export const ProcedsBlocklyInit = (Blockly) => {
         domToMutation: makeProcedureDomToMutation(), */
   };
 
+  disableContextMenuOptions(Blockly)
+
+}
+
+const disableContextMenuOptions = (Blockly) => {
+  const helpOption = Blockly.ContextMenuRegistry.registry.getItem('blockHelp')
+  const duplicateOption = Blockly.ContextMenuRegistry.registry.getItem('blockDuplicate')
+  const disableOption = Blockly.ContextMenuRegistry.registry.getItem('blockDisable')
+
+  disableOption.preconditionFn = () => 'disable'
+  duplicateOption.preconditionFn = () => 'disable'
+  helpOption.preconditionFn = () => 'disabled'
+  
 }
 
 export const allProcedures = (workspace) => workspace.getAllBlocks().filter(isProcedure)
@@ -32,7 +45,6 @@ const isProcedure = (block) => block.type === 'Procedimiento'
 
 export const allProcedureNames = (workspace) => allProcedures(workspace).map(getName)
 
-//TODO no anda
 const findLegalName = (name, block, index, workspace) => {
   const newName = index === 0 ? name : (name + index)
   return allProcedureNames(workspace).includes(newName) ? findLegalName(name, block, index + 1, workspace) : newName;
@@ -107,7 +119,7 @@ const addParameter = (self, Blockly, argName) => {
   const id = "INPUTARG" + argsAmount;
 
   self.arguments_.push(name);
-  //self.updateParams_();
+  self.updateParams_();
 
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
   callers.forEach(caller => {
@@ -183,15 +195,14 @@ const removeParameter = (self, argsAmount, Blockly) => {
 
 }
 
-
-const createCall = (self, Blockly) => {
-  var name = self.getFieldValue('NAME');
+const createCallerXml = (block) => {
+  var name = block.getFieldValue('NAME');
   var xmlMutation = document.createElement('mutation');
   xmlMutation.setAttribute('name', name);
 
-  self.arguments_.forEach((_, i) => {
+  block.arguments_.forEach((_, i) => {
     var xmlArg = document.createElement('arg');
-    xmlArg.setAttribute('name', self.arguments_[i]);
+    xmlArg.setAttribute('name', block.arguments_[i]);
     xmlMutation.appendChild(xmlArg);
   })
 
@@ -199,10 +210,13 @@ const createCall = (self, Blockly) => {
   xmlBlock.appendChild(xmlMutation);
 
   xmlBlock.setAttribute('type', 'procedures_callnoreturn');
+  return xmlBlock
+}
 
-  console.log(Blockly.Xml.domToPrettyText(xmlBlock))
+const createCall = (self, Blockly) => {
 
-  callbackFactory(self, xmlBlock, Blockly)
+  const block = callbackFactory(self, createCallerXml(self), Blockly)
+
 
   try {
     const procedureBlock = self;
@@ -224,6 +238,7 @@ const callbackFactory = (block, xml, Blockly) => {
     var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
     // Move the new block next to the old block.
     var xy = block.getRelativeToSurfaceXY();
+    console.log(xy)
     if (block.RTL) {
       xy.x -= Blockly.SNAP_RADIUS;
     } else {
@@ -234,9 +249,7 @@ const callbackFactory = (block, xml, Blockly) => {
   } finally {
     Blockly.Events.enable();
   }
-  if (Blockly.Events.isEnabled() && !newBlock.isShadow()) {
-    Blockly.Events.fire(new Blockly.Events.BlockCreate(newBlock));
-  }
+
   newBlock.select();
 
   return newBlock; // [!]
