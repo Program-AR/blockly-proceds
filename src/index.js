@@ -33,7 +33,10 @@ const isProcedure = (block) => block.type === 'Procedimiento'
 export const allProcedureNames = (workspace) => allProcedures(workspace).map(getName)
 
 //TODO no anda
-const findLegalName = (name, block, index) => allProcedureNames(block.workspace).includes(name) ? findLegalName(name + " " + index, block, index + 1) : name
+const findLegalName = (name, block, index, workspace) => {
+  const newName = index === 0 ? name : (name + index)
+  return allProcedureNames(workspace).includes(newName) ? findLegalName(name, block, index + 1, workspace) : newName;
+}
 
 const makeProcedureInit = (
   Blockly,
@@ -45,8 +48,7 @@ const makeProcedureInit = (
   tooltip,
   helpUrl,
 ) => {
-
-  var defaultLegalName = findLegalName(defaultName, block, 1);
+  var defaultLegalName = findLegalName(defaultName, block, 0, Blockly.getMainWorkspace());
   var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
   nameField.setSpellcheck(false);
 
@@ -142,15 +144,14 @@ const addParameter = (self, Blockly, argName) => {
       caller.updateShape_()
     })
 
-    /*     }
-    TODO: this changes the argument blocks when the name of the argument changes
-        const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
-        varBlocks.forEach(varBlock => {
-          var varField = varBlock.getField("VAR");
-          if (varField.getValue() === oldName) {
-            varField.setValue(newName);
-          }
-        }) */
+    //TODO: this changes the argument blocks when the name of the argument changes
+    const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
+    varBlocks.forEach(varBlock => {
+      var varField = varBlock.getField("VAR");
+      if (varField.getValue() === oldName) {
+        varField.setValue(newName);
+      }
+    })
 
     return newName;
   });
@@ -184,44 +185,43 @@ const removeParameter = (self, argsAmount, Blockly) => {
 
 
 const createCall = (self, Blockly) => {
-  /*   var name = self.getFieldValue('NAME');
-    var xmlMutation = document.createElement('mutation');
-    xmlMutation.setAttribute('name', name);
-  
-    self.arguments_.forEach((_, i) => {
-      var xmlArg = document.createElement('arg');
-      xmlArg.setAttribute('name', self.arguments_[i]);
-      xmlMutation.appendChild(xmlArg);
-    })
-  
-    var xmlBlock = document.createElement('block');
-    xmlBlock.appendChild(xmlMutation);
-  
-    xmlBlock.setAttribute('type', 'procedures_callnoreturn');
-  
-    console.log(Blockly.Xml.domToPrettyText(xmlBlock))
-  
-    callbackFactory(self, xmlBlock, Blockly)
-  
-     try {
-      const procedureBlock = self;
-  
-      Blockly.Events.disabled_ = 1;
-      const posParent = procedureBlock.getRelativeToSurfaceXY();
-      const pos = block.getRelativeToSurfaceXY();
-      let width = procedureBlock.width;
-  
-      block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
-    } finally {
-      Blockly.Events.disabled_ = 0;
-    }  */
+  var name = self.getFieldValue('NAME');
+  var xmlMutation = document.createElement('mutation');
+  xmlMutation.setAttribute('name', name);
+
+  self.arguments_.forEach((_, i) => {
+    var xmlArg = document.createElement('arg');
+    xmlArg.setAttribute('name', self.arguments_[i]);
+    xmlMutation.appendChild(xmlArg);
+  })
+
+  var xmlBlock = document.createElement('block');
+  xmlBlock.appendChild(xmlMutation);
+
+  xmlBlock.setAttribute('type', 'procedures_callnoreturn');
+
+  console.log(Blockly.Xml.domToPrettyText(xmlBlock))
+
+  callbackFactory(self, xmlBlock, Blockly)
+
+  try {
+    const procedureBlock = self;
+
+    Blockly.Events.disabled_ = 1;
+    const posParent = procedureBlock.getRelativeToSurfaceXY();
+    const pos = block.getRelativeToSurfaceXY();
+    let width = procedureBlock.width;
+
+    block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+  } finally {
+    Blockly.Events.disabled_ = 0;
+  }
 }
 
 const callbackFactory = (block, xml, Blockly) => {
   Blockly.Events.disable();
   try {
     var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
-    console.log(newBlock)
     // Move the new block next to the old block.
     var xy = block.getRelativeToSurfaceXY();
     if (block.RTL) {
@@ -252,12 +252,10 @@ const createParameterCaller = (procedureBlock, name, Blockly) => {
 
   var block = callbackFactory(procedureBlock, xmlBlock, Blockly);
   block.$parent = procedureBlock.id;
-  console.log(block)
 
   try {
     Blockly.Events.disabled_ = 1;
     const posParent = procedureBlock.getRelativeToSurfaceXY();
-    console.log(posParent)
     const pos = block.getRelativeToSurfaceXY();
     let width = procedureBlock.width;
 
