@@ -129,8 +129,7 @@ const addParameter = (self, Blockly, argName) => {
   self.updateParams_();
 
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
-  console.log("--------------------------")
-  console.log(callers)
+
   callers.forEach(caller => {
     caller.arguments_.push(name);
     caller.updateShape_()
