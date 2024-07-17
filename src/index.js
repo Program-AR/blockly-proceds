@@ -118,7 +118,7 @@ const addParameter = (self, Blockly, argName) => {
     16,
     16,
     Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name),
-    () => createParameterCaller(self, self.getVars()[argsAmount])()
+    () => createParameterCaller(self, self.arguments_[argsAmount])()
   )
 
   const removeParameterButton = new Blockly.FieldImage(
