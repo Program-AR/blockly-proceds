@@ -1,4 +1,5 @@
 import 'blockly/blocks';
+import { ObservableProcedureModel } from '@blockly/block-shareable-procedures'
 
 /**
  * TODO:
@@ -23,10 +24,46 @@ export const ProcedsBlocklyInit = (Blockly) => {
         Blockly.Msg.PROCEDURES_DEFNORETURN_TOOLTIP,
         Blockly.Msg.PROCEDURES_DEFNORETURN_HELPURL
       )
+
+      this.model = new ObservableProcedureModel(this.workspace, Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE);
+      this.workspace.getProcedureMap().add(this.model);
     },
     updateParams_: () => { },
     /* customContextMenu: makeProcedureCustomMenu(),
         domToMutation: makeProcedureDomToMutation(), */
+
+
+    getProcedureModel() {
+      return this.model;
+    },
+
+    isProcedureDef() {
+      return true;
+    },
+    getVarModels() {
+      // If your procedure references variables
+      // then you should return those models here.
+      return [];
+    },
+    doProcedureUpdate() {
+      this.setFieldValue(this.model.getName(), 'NAME');
+
+      this.setFieldValue(
+        this.model.getParameters()
+          .map((p) => p.getName())
+          .join(','), 'PARAMS');
+    },
+
+    destroy: function () {
+      if (this.isInsertionMarker()) return;
+      try {
+        Blockly.getMainWorkspace().getProcedureMap().delete(this.model.getId());
+      }
+      catch (error) {
+        console.log(error)
+      }
+      this.doProcedureUpdate()
+    }
   };
 
   disableContextMenuOptions(Blockly)
@@ -41,18 +78,19 @@ const disableContextMenuOptions = (Blockly) => {
   disableOption.preconditionFn = () => 'disable'
   duplicateOption.preconditionFn = () => 'disable'
   helpOption.preconditionFn = () => 'disabled'
-  
+
 }
 
 export const allProcedures = (workspace) => workspace.getAllBlocks().filter(isProcedure)
 
 const getName = (procedureBlock) => procedureBlock.getFieldValue('NAME')
 
-const isProcedure = (block) => block.type === 'Procedimiento'
+//const isProcedure = (block) => block.type === 'Procedimiento'
+const isProcedure = (block) => block.type === 'procedures_defnoreturn'
 
 export const allProcedureNames = (workspace) => allProcedures(workspace).map(getName)
 
-const findLegalName = (name, block, index, workspace) => {
+export const findLegalName = (name, block, index, workspace) => {
   const newName = index === 0 ? name : (name + index)
   return allProcedureNames(workspace).includes(newName) ? findLegalName(name, block, index + 1, workspace) : newName;
 }
@@ -67,7 +105,7 @@ const makeProcedureInit = (
   tooltip,
   helpUrl,
 ) => {
-  var defaultLegalName = findLegalName(defaultName, block, 0, Blockly.getMainWorkspace());
+  var defaultLegalName = Blockly.Procedures.findLegalName(defaultName, block);
   var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
   nameField.setSpellcheck(false);
 
