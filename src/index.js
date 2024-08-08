@@ -1,5 +1,5 @@
 import 'blockly/blocks';
-import { ObservableProcedureModel, ObservableParameterModel } from '@blockly/block-shareable-procedures'
+import { ObservableProcedureModel } from '@blockly/block-shareable-procedures'
 
 /**
  * TODO:
@@ -17,7 +17,6 @@ const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfq
     // -----------------------
   
     const makeProcedureCustomMenu = (withParametersOptions = true) => {
-      console.log('makeprocedurecustommenu')
       return function(options) {
         // Add options to create getters for each parameter.
         if (!this.isCollapsed()) {
@@ -53,13 +52,10 @@ const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfq
   
   
     const makeProcedureDomToMutation = () => {
-      console.log('makeproceduredomtomutation');
       return function(xmlElement) {
         this.arguments_ = [];
         for (var i = 0, childNode; childNode = xmlElement.childNodes[i]; i++) {
-          console.log(childNode.nodeName);
           if (childNode.nodeName.toLowerCase() == 'arg') {
-            console.log(childNode.getAttribute('name'));
             this.arguments_.push(childNode.getAttribute('name'));
           }
         }
@@ -118,7 +114,6 @@ export const ProcedsBlocklyInit = (Blockly) => {
     doProcedureUpdate() {
       this.setFieldValue(this.model.getName(), 'NAME');
 
-      console.log(this.model.getParameters());
 
       this.setFieldValue(
         this.model.getParameters()
@@ -279,9 +274,6 @@ const getAvailableName = (block, name) => {
 
 const addParameter = (self, Blockly, argName) => {
 
-
-  console.log('addParameter');
-  
   const argsAmount = self.arguments_.length
   const defaultName = argName || Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
   const name = getAvailableName(self, defaultName);
@@ -335,54 +327,17 @@ const addParameter = (self, Blockly, argName) => {
 
     self.arguments_[argsAmount] = newName;
 
-    console.log('newName', newName)
-    console.log('oldName', oldName)
-
-    console.log('callers', callers)
-    console.log('self ', self)
-
-    // ciclo proveniente de proceds-blockly original 
-    /*
-    var blocks = self.workspace.getAllBlocks();
-    blocks.forEach(block => {
-      if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
-        block.arguments_ = block.arguments_.map(argName => { console.log(argName); return argName === oldName ? newName : argName})
-        //block.arguments_.push(name);
-        block.updateShape_();
-      }})
-    */
-
     callers.forEach(caller => {
       caller.arguments_ = caller.arguments_.map(argName => argName === oldName ? newName : argName)
       caller.updateShape_()
     })
 
-    console.log(self.workspace.getAllBlocks());
-    const varBlocks = self.workspace.getAllBlocks().filter( block => block.type === "param_get" && block.$parent === self.id)
-
-    console.log(varBlocks);
+    const varBlocks = self.workspace.getAllBlocks().filter( block => block.type === "variables_get" && block.$parent === self.id)
 
     varBlocks.forEach(varBlock => {
-
       var varField = varBlock.getField("VAR");
-      console.log('varField ', varField);
-      console.log('varField ', varField.getValue());
-      
-      /*if (varField.getValue() === oldName )
+      if (varField.getValue() === oldName) {
         varField.setValue(newName)
-      */
-      
-      console.log('varBlock', varBlock);
-      //console.log('fieldvariable', varBlock.getFieldVariable())
-      var varField = varBlock.getField("VAR");
-      console.log('varField ', varField);
-      console.log('getVariable ', varField.getVariable().name);
-      if (varField.getVariable().name === oldName) {
-        varField.getVariable().name = newName;
-
-        /// esto estaria funcionando, peeeero no refresca la opcion del menu de variables.
-        /// si desplegamos el menu, aparece renombrada
-        /// o si pudieramos forzar el rerender.
       }
     })
 
@@ -477,7 +432,7 @@ const callbackFactory = (block, xml, Blockly) => {
 
   newBlock.select();
 
-  return newBlock; // [!]
+  return newBlock;
 };
 
 const createParameterCaller = (procedureBlock, name, Blockly) => {
@@ -485,17 +440,13 @@ const createParameterCaller = (procedureBlock, name, Blockly) => {
   xmlField.textContent = name;
 
   xmlField.setAttribute('name', 'VAR')
-  //xmlField.setAttribute('VAR', name)
-  console.log('xmlField ', xmlField);
 
   var xmlBlock = document.createElement('block')
   xmlBlock.appendChild(xmlField)
-  xmlBlock.setAttribute('type', 'param_get')
+  xmlBlock.setAttribute('type', 'variables_get')
 
   var block = callbackFactory(procedureBlock, xmlBlock, Blockly);
   block.$parent = procedureBlock.id;
-
-  console.log('createParametercaller', block);
 
   try {
     Blockly.Events.disabled_ = 1;
