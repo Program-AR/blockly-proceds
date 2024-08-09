@@ -12,6 +12,69 @@ const PLUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2Dt
 const MINUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2DtAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQfhDAUCCi+xWH4JAAABcUlEQVR42u3c7ZGCMBSG0etuYcTKls7AyrSEVWd4+bjnUECMeSbhD6kCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBzu4XHm2rUvPekD2yutR57/4itTLXU0/Pvs9SUW5TcDrDUyE3r9Na6ZwZKBWD5PxVKIBPAVGtknGsZibeBTADPyCjXE1idn8A0/gJjXFPgn0sEwIEljgAHwPc2Xx87QHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNDcb2SUsfc0T2re/utAO0BzPg49sot8HOoI+M5IDJIJ4OF+gI+F7gpyRcwxxa6Iyb0E3mvYB96y1kgtv2vijubS18QBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAWXq7xrTQhKAi3AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTEyLTA1VDAyOjEwOjQ3LTA1OjAwdZLI/gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0xMi0wNVQwMjoxMDo0Ny0wNTowMATPcEIAAAAASUVORK5CYII="
 const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfiBAUBKBeKSgeBAAABTElEQVQoz22QzyvDcRjHX5/vvrMyStI2uZgftdVCSpJCyW1y00oUF+Xg4OIkx5VyUyJOsgv/gnJw4YCSSFMyB5pGbLJ99/k8LltreB2f9+v50eOigoc5FvGTJF8pugCwaKaNaE98uf9zMBXwjtNpbvmuaH2B0+HXuuyMEbOlQ4U1M5ZVcYbowg02YfZW5cnE9JIROdI7jsiOacoMPLZdEYPR1ouQkxCRG+feESlIXkQOzLR+NhvCpc3UbPcHAoRsADcAQ0Twq0ZosQgEVY0SqvGpkAUCxkIUYRP4bZRRNi9pvaD+TwXyFseHuYzy/Kt8CWfQ5Ems6C/5y7uZyDEH0Nt8vq0dUx0XzaapPyIIoIi23+47+SrlTvrTjLhKy2wmO95OqiacS+QBH9gAFDlOZnYbrimWOixSZCwUlK+vZd7bXiPldyi0yqX1OtkfCBS/9XAtDKAAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDQtMDVUMDQ6NDQ6NDItMDM6MDD+uUN1AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTA0LTA1VDA0OjQwOjIzLTAzOjAw5hdZgAAAAABJRU5ErkJggg=="
 
+// -----------------------
+// [!] Custom context menu
+// -----------------------
+
+const makeProcedureCustomMenu = (withParametersOptions = true) => {
+  return function (options) {
+    // Add options to create getters for each parameter.
+    if (!this.isCollapsed()) {
+      for (var i = this.arguments_.length - 1; i >= 0; i--) {
+        var option = { enabled: true };
+        var name = this.arguments_[i];
+        option.text = Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name);
+        option.callback = createParameterCaller(this, name);
+
+        options.unshift(option);
+      }
+    }
+
+    // Add option to create caller.
+    var option = { enabled: true };
+    var name = this.getFieldValue('NAME');
+    option.text = Blockly.Msg.PROCEDURES_CREATE_DO.replace('%1', name);
+    var xmlMutation = document.createElement('mutation');
+    xmlMutation.setAttribute('name', name);
+    for (var i = 0; i < this.arguments_.length; i++) {
+      var xmlArg = document.createElement('arg');
+      xmlArg.setAttribute('name', this.arguments_[i]);
+      xmlMutation.appendChild(xmlArg);
+    }
+    var xmlBlock = document.createElement('block', null, xmlMutation);
+    xmlBlock.setAttribute('type', this.callType_);
+    option.callback = Blockly.ContextMenu.callbackFactory(this, xmlBlock);
+    options.unshift(option); // [!]
+
+    options.pop(); // [!] Remove help
+  };
+};
+
+
+const makeProcedureDomToMutation = () => {
+  return function (xmlElement) {
+    this.arguments_ = [];
+    for (var i = 0, childNode; childNode = xmlElement.childNodes[i]; i++) {
+      if (childNode.nodeName.toLowerCase() == 'arg') {
+        this.arguments_.push(childNode.getAttribute('name'));
+      }
+    }
+
+    this.updateParams_();
+    Blockly.Procedures.mutateCallers(this);
+
+    // Show or hide the statement input.
+    this.setStatements_(xmlElement.getAttribute('statements') !== 'false');
+
+    this.arguments_.forEach(function (name, i) { // [!]
+      addParameter(this, i, name);
+    }.bind(this));
+  };
+}
+
+
+
+
 export const ProcedsBlocklyInit = (Blockly) => {
 
   Blockly.Blocks['procedures_defnoreturn'] = {
@@ -29,9 +92,12 @@ export const ProcedsBlocklyInit = (Blockly) => {
       this.workspace.getProcedureMap().add(this.model);
     },
     updateParams_: () => { },
-    /* customContextMenu: makeProcedureCustomMenu(),
-        domToMutation: makeProcedureDomToMutation(), */
+    customContextMenu: makeProcedureCustomMenu(),
+    //domToMutation: makeProcedureDomToMutation(),  // se quita el custom
 
+    getProcedureDef: function () {
+      return [this.getFieldValue('NAME'), this.arguments_, false];
+    },
 
     getProcedureModel() {
       return this.model;
@@ -48,11 +114,60 @@ export const ProcedsBlocklyInit = (Blockly) => {
     doProcedureUpdate() {
       this.setFieldValue(this.model.getName(), 'NAME');
 
+
       this.setFieldValue(
         this.model.getParameters()
           .map((p) => p.getName())
           .join(','), 'PARAMS');
     },
+
+    // de la documentacion de blockly para la serializacion - saveextrastate y loadextrastate
+    /*
+        saveExtraState(doFullSerialization) {
+          const state = Object.create(null);
+          state['procedureId'] = this.model.getId();
+      
+          if (doFullSerialization) {
+            state['name'] = this.model.getName();
+            state['parameters'] = this.model.getParameters().map((p) => {
+              return {name: p.getName(), id: p.getId()};
+            });
+            state['returnTypes'] = this.model.getReturnTypes();
+      
+            // Flag for deserialization.
+            state['createNewModel'] = true;
+          }
+      
+          return state;
+        },
+      
+        loadExtraState(state) {
+          const id = state['procedureId']
+          const map = this.workspace.getProcedureMap();
+      
+          if (map.has(id) && !state['createNewModel']) {
+            // Delete the existing model (created in init).
+            map.delete(this.model.getId());
+            // Grab a reference to the model we're supposed to reference.
+            this.model = map.get(id);
+            this.doProcedureUpdate();
+            return;
+          }
+      
+          // There is no existing procedure model (we are likely pasting), so
+          // generate it from JSON.
+          this.model
+              .setName(state['name'])
+              .setReturnTypes(state['returnTypes']);
+          for (const [i, param] of state['parameters'].entries()) {
+            this.model.insertParameter(
+                new ObservableParameterModel(
+                    this.workspace, param['name'], param['id']), i );
+          }
+          this.doProcedureUpdate();
+        },
+    
+    */
 
     destroy: function () {
       if (this.isInsertionMarker()) return;
@@ -158,6 +273,7 @@ const getAvailableName = (block, name) => {
 }
 
 const addParameter = (self, Blockly, argName) => {
+
   const argsAmount = self.arguments_.length
   const defaultName = argName || Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
   const name = getAvailableName(self, defaultName);
@@ -166,12 +282,27 @@ const addParameter = (self, Blockly, argName) => {
   self.arguments_.push(name);
   self.updateParams_();
 
+  var blocks = self.workspace.getAllBlocks();
+  blocks.forEach(block => {
+    if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
+      block.arguments_.push(name);
+      block.updateShape_();
+    }
+  })
+
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
 
   callers.forEach(caller => {
     caller.arguments_.push(name);
     caller.updateShape_()
   })
+
+  /// insertParameter from blockly documentation
+  /*
+    self.model.insertParameter(new ObservableParameterModel(
+        self.workspace, name));
+  */
+
 
   const createCallButton = new Blockly.FieldImage(
     HAND,
@@ -202,11 +333,12 @@ const addParameter = (self, Blockly, argName) => {
       caller.updateShape_()
     })
 
-    const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
+    const varBlocks = self.workspace.getAllBlocks().filter(block => block.type === "variables_get" && block.$parent === self.id)
+
     varBlocks.forEach(varBlock => {
       var varField = varBlock.getField("VAR");
       if (varField.getValue() === oldName) {
-        varField.setValue(newName);
+        varField.setValue(newName)
       }
     })
 
@@ -225,6 +357,14 @@ const addParameter = (self, Blockly, argName) => {
 }
 
 const removeParameter = (self, argsAmount, Blockly) => {
+
+
+  /// deleteParameter from blockly documentation
+  /*
+  self.model.getParameters(); // toma todos los parametros del procedimiento
+  self.model.deleteParameter(index); // borra el parametro de la posicion index
+  */
+
   let arguments_ = self.arguments_
   self.arguments_.forEach((_, i) => self.removeInput("INPUTARG" + i))
   self.arguments_ = []
@@ -236,8 +376,6 @@ const removeParameter = (self, argsAmount, Blockly) => {
     block.updateShape_();
   })
   arguments_.forEach(arg => addParameter(self, Blockly, arg))
-
-
 }
 
 const createCallerXml = (block) => {
@@ -295,13 +433,15 @@ const callbackFactory = (block, xml, Blockly) => {
 
   newBlock.select();
 
-  return newBlock; // [!]
+  return newBlock;
 };
 
 const createParameterCaller = (procedureBlock, name, Blockly) => {
   var xmlField = document.createElement('field')
   xmlField.textContent = name;
+
   xmlField.setAttribute('name', 'VAR')
+
   var xmlBlock = document.createElement('block')
   xmlBlock.appendChild(xmlField)
   xmlBlock.setAttribute('type', 'variables_get')
