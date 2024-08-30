@@ -88,7 +88,21 @@ export const ProcedsBlocklyInit = (Blockly) => {
       this.model = new ObservableProcedureModel(this.workspace, Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE);
       this.workspace.getProcedureMap().add(this.model);
     },
+    setStatements_: function(a) {
+      this.hasStatements_ !== a && (a ? (this.appendStatementInput("STACK").appendField(Blockly.Msg.PROCEDURES_DEFNORETURN_DO), this.getInput("RETURN") && this.moveInputBefore("STACK", "RETURN")) : this.removeInput("STACK", true), this.hasStatements_ = a);
+    },
+    //renameProcedure: Blockly.Blocks['procedures_defreturn'].renameProcedure,
+    updateShape_: Blockly.Blocks['procedures_defreturn'].updateShape_,
+    /*
+    function(a, b) {
+      $.Names$$module$build$src$core$names.equals(a, this.getProcedureCall()) && (this.setFieldValue(b, "NAME"), this.setTooltip((this.outputConnection ? $.Msg$$module$build$src$core$msg.PROCEDURES_CALLRETURN_TOOLTIP : $.Msg$$module$build$src$core$msg.PROCEDURES_CALLNORETURN_TOOLTIP).replace("%1", b)));
+    },
+    */
+    setProcedureParameters_: Blockly.Blocks['procedures_defreturn'].setProcedureParameters_,
+
+    callType_: 'procedures_callnoreturn',
     updateParams_: () => { },
+
     customContextMenu: makeProcedureCustomMenu(),
     //domToMutation: makeProcedureDomToMutation(),  // se quita el custom
 
@@ -100,6 +114,8 @@ export const ProcedsBlocklyInit = (Blockly) => {
     getProcedureModel() {
       console.log('paso por aca getProcedureModel')
       console.log(this.model)
+      console.log('blockly', Blockly.Blocks['procedures_callnoreturn'])
+      console.log('blockly 2', Blockly.Blocks['procedures_defnoreturn'])
       return this.model;
     },
 
@@ -111,20 +127,34 @@ export const ProcedsBlocklyInit = (Blockly) => {
       // If your procedure references variables
       // then you should return those models here.
       console.log('paso por aca var models')
-      return ['a','b'];
+      console.log(this.arguments_);
+      return [];
+      //return this.arguments_;
     },
+    getVars: function () {
+      return this.arguments_;
+    },
+
     doProcedureUpdate() {
       console.log('paso por aca doprocedureUpdate')
-      console.log('getName', this.model.getName());
       this.setFieldValue(this.model.getName(), 'NAME');
 
       console.log('getParameters', this.model.getParameters());
       console.log('getArguments', this.arguments_);
+      /*
       this.setFieldValue(
         this.model.getParameters()
           .map((p) => p.getName())
           .join(','), 'PARAMS');
-    },
+      
+      this.arguments_ &&
+          this.setFieldValue(
+            this.arguments_
+              //.map((p) => p.getName())
+              .map((p) => p)
+              .join(','), 'PARAMS');
+              */
+        },
     
 
     // de la documentacion de blockly para la serializacion - saveextrastate y loadextrastate
@@ -188,26 +218,98 @@ export const ProcedsBlocklyInit = (Blockly) => {
     }
   };
 
-/*
+
   Blockly.Blocks['procedures_callnoreturn'] = {
-//      init: Blockly.Blocks['procedures_callreturn'].init,
-      init: function () {
-        makeProcedureInit(Blockly, this,
-          true,
-          Blockly.Msg.PROCEDURES_CALLNORETURN_PROCEDURE,
-          Blockly.Msg.PROCEDURES_CALLNORETURN_TITLE,
-          Blockly.Msg.PROCEDURES_CALLNORETURN_COMMENT,
-          Blockly.Msg.PROCEDURES_CALLNORETURN_TOOLTIP,
-          Blockly.Msg.PROCEDURES_CALLNORETURN_HELPURL
-        )
+      init: 
+      function () {
+        console.log('paso por aca init call')
   
-        //this.model = new ObservableProcedureModel(this.workspace, Blockly.Msg.PROCEDURES_CALLNORETURN_PROCEDURE);
-        //this.workspace.getProcedureMap().add(this.model);
+      this.appendDummyInput("TOPROW").appendField("", "NAME");
+      this.setPreviousStatement(true);
+      this.setNextStatement(true);
+      this.setStyle("procedure_blocks");
+      this.setHelpUrl(Blockly.Msg.PROCEDURES_CALLNORETURN_HELPURL);
+      this.arguments_ = [];
+      this.argumentVarModels_ = [];
+      this.quarkConnections_ = {};
+      this.quarkIds_ = null;
+      this.previousEnabledState_ = true;
+    }, defType_: "procedures_defnoreturn",
+    
+      updateParams_: function() {
+        let a = "";
+        this.arguments_.length && (a = Blockly.Msg.PROCEDURES_BEFORE_PARAMS + " " + this.arguments_.join(", "));
+        console.log('updateParams', this.arguments_);
+        Blockly.Events.disable();
+        //$.disable$$module$build$src$core$events$utils();
+        try {
+          this.setFieldValue(a, "PARAMS");
+        } finally {
+          Blockly.Events.enable();
+          //$.enable$$module$build$src$core$events$utils();
+        }
       },
-      updateParams_: () => { },
-      customContextMenu: makeProcedureCustomMenu(),
-      //domToMutation: makeProcedureDomToMutation(),  // se quita el custom
-  
+      //updateParams_: Blockly.Blocks['procedures_callreturn'].updateParams_,
+      setStatements_: Blockly.Blocks['procedures_callreturn'].setStatements_,
+      mutationToDom: Blockly.Blocks['procedures_callreturn'].mutationToDom,
+      domToMutation: Blockly.Blocks['procedures_callreturn'].domToMutation,
+      decompose: Blockly.Blocks['procedures_callreturn'].decompose,
+      compose: Blockly.Blocks['procedures_callreturn'].compose,
+      getProcedureDef: function () {
+        return [this.getFieldValue('NAME'), this.arguments_, true];
+      },
+      getVars: Blockly.Blocks['procedures_callreturn'].getVars,
+      getVarModels: Blockly.Blocks['procedures_callreturn'].getVarModels,
+      renameVarById: Blockly.Blocks['procedures_callreturn'].renameVarById,
+      updateVarName: Blockly.Blocks['procedures_callreturn'].updateVarName,
+      displayRenamedVar_: Blockly.Blocks['procedures_callreturn'].displayRenamedVar_,
+      customContextMenu: Blockly.Blocks['procedures_callreturn'].customContextMenu,
+      getProcedureCall: function() {
+        return this.getFieldValue("NAME");
+      },   
+      updateShape_: Blockly.Blocks['procedures_callreturn'].updateShape_,
+      renameProcedure: Blockly.Blocks['procedures_callreturn'].renameProcedure,
+      /*
+      function(a, b) {
+        $.Names$$module$build$src$core$names.equals(a, this.getProcedureCall()) && (this.setFieldValue(b, "NAME"), this.setTooltip((this.outputConnection ? $.Msg$$module$build$src$core$msg.PROCEDURES_CALLRETURN_TOOLTIP : $.Msg$$module$build$src$core$msg.PROCEDURES_CALLNORETURN_TOOLTIP).replace("%1", b)));
+      },
+      */
+      setProcedureParameters_: Blockly.Blocks['procedures_callreturn'].setProcedureParameters_,
+      /*function(a, b) {
+        var c = $.getDefinition$$module$build$src$core$procedures(
+          this.getProcedureCall(),
+          this.workspace
+        );
+        (c = (c = c && c.getIcon($.MutatorIcon$$module$build$src$core$icons$mutator_icon.TYPE)) && c.bubbleIsVisible()) ? this.setCollapsed(false) : (this.quarkConnections_ = {}, this.quarkIds_ = null);
+        if (a.join("\n") === this.arguments_.join("\n"))
+          this.quarkIds_ = b;
+        else {
+          if (b.length !== a.length)
+            throw RangeError("paramNames and paramIds must be the same length.");
+          this.quarkIds_ || (this.quarkConnections_ = {}, this.quarkIds_ = []);
+          for (let e = 0; e < this.arguments_.length; e++) {
+            var d = this.getInput("ARG" + e);
+            d && (d = d.connection.targetConnection, this.quarkConnections_[this.quarkIds_[e]] = d, c && d && -1 === b.indexOf(this.quarkIds_[e]) && (d.disconnect(), d.getSourceBlock().bumpNeighbours()));
+          }
+          this.arguments_ = [].concat(a);
+          this.argumentVarModels_ = [];
+          for (a = 0; a < this.arguments_.length; a++)
+            c = $.getOrCreateVariablePackage$$module$build$src$core$variables(this.workspace, null, this.arguments_[a], ""), this.argumentVarModels_.push(c);
+          this.updateShape_();
+          if (this.quarkIds_ = b) {
+            for (b = 0; b < this.arguments_.length; b++)
+              if (a = this.quarkIds_[b], a in this.quarkConnections_) {
+                let e;
+                (null == (e = this.quarkConnections_[a]) ? 0 : e.reconnect(this, "ARG" + b)) || delete this.quarkConnections_[a];
+              }
+          }
+        }
+      },*/
+
+
+      //customContextMenu: makeProcedureCustomMenu(),
+      domToMutation: Blockly.Blocks['procedures_callreturn'].domToMutation,
+  /*
   
       getProcedureModel() {
         return this.model;
@@ -240,9 +342,9 @@ export const ProcedsBlocklyInit = (Blockly) => {
           console.log(error)
         }
         this.doProcedureUpdate()
-      }
+      }*/
     };
-*/
+
   disableContextMenuOptions(Blockly)
 
 }
@@ -316,7 +418,9 @@ const makeProcedureInit = (
   block.setTooltip(tooltip);
   block.setHelpUrl(helpUrl);
   block.arguments_ = [];
+  block.argumentVarModels_ = [];
   block.statementConnection_ = null;
+  block.setStyle("procedure_blocks");
 
   // [!] adding create call button
   var createCallButton = new Blockly.FieldImage(
@@ -348,10 +452,10 @@ const addParameter = (self, Blockly, argName) => {
     console.log('block.type ', block.type, self.arguments_)
     //console.log('getprocedurecall', block.getProcedureCall());
     console.log('selfgetproceduredef', self.getProcedureDef()[0]);
-    if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
+    /*if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
       block.arguments_.push(name);
       block.updateShape_();
-    }
+    }*/
   })
 
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
@@ -393,11 +497,12 @@ const addParameter = (self, Blockly, argName) => {
     self.arguments_[argsAmount] = newName;
 
     callers.forEach(caller => {
+      console.log('callers?')
       caller.arguments_ = caller.arguments_.map(argName => argName === oldName ? newName : argName)
       caller.updateShape_()
     })
 
-    const varBlocks = self.workspace.getAllBlocks().filter(block => { console.log('varBlocks'); return (block.type === "variables_get" && block.$parent === self.id) })
+    const varBlocks = self.workspace.getAllBlocks().filter(block => { console.log('varBlocks', block); return (block.type === "variables_get" && block.$parent === self.id) })
 
     varBlocks.forEach(varBlock => {
       console.log('varblocks ? ')
@@ -423,7 +528,7 @@ const addParameter = (self, Blockly, argName) => {
 
 const removeParameter = (self, argsAmount, Blockly) => {
 
-
+  console.log('removeparameters', self.arguments_)
   /// deleteParameter from blockly documentation
   /*
   self.model.getParameters(); // toma todos los parametros del procedimiento
