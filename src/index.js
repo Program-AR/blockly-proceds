@@ -83,7 +83,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
     },
     updateParams_: () => { },
     customContextMenu: makeProcedureCustomMenu(),
-   // domToMutation: makeProcedureDomToMutation(), 
+    domToMutation: makeProcedureDomToMutation(), 
 
     getProcedureDef: function () {
       return [this.getFieldValue('NAME'), this.arguments_, false];
