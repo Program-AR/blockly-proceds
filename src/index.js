@@ -108,6 +108,9 @@ export const ProcedsBlocklyInit = (Blockly) => {
     init_base_callnoreturn.call(this);
   };
 
+  Blockly.Blocks.procedures_callnoreturn.onchange = function () {
+    requiredAllInputs(this) // Input fields are added after instantiation 
+  };
 }
 
 const disableContextMenuOptions = (Blockly) => {
