@@ -88,8 +88,6 @@ export const ProcedsBlocklyInit = (Blockly) => {
         Blockly.Msg.PROCEDURES_DEFNORETURN_HELPURL
       )
 
-      this.model = new ObservableProcedureModel(this.workspace, Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE);
-      this.workspace.getProcedureMap().add(this.model);
     },
     updateParams_: () => { },
     customContextMenu: makeProcedureCustomMenu(),
@@ -97,10 +95,6 @@ export const ProcedsBlocklyInit = (Blockly) => {
 
     getProcedureDef: function () {
       return [this.getFieldValue('NAME'), this.arguments_, false];
-    },
-
-    getProcedureModel() {
-      return this.model;
     },
 
     isProcedureDef() {
@@ -111,74 +105,6 @@ export const ProcedsBlocklyInit = (Blockly) => {
       // then you should return those models here.
       return [];
     },
-    doProcedureUpdate() {
-      this.setFieldValue(this.model.getName(), 'NAME');
-
-
-      this.setFieldValue(
-        this.model.getParameters()
-          .map((p) => p.getName())
-          .join(','), 'PARAMS');
-    },
-
-    // de la documentacion de blockly para la serializacion - saveextrastate y loadextrastate
-    /*
-        saveExtraState(doFullSerialization) {
-          const state = Object.create(null);
-          state['procedureId'] = this.model.getId();
-      
-          if (doFullSerialization) {
-            state['name'] = this.model.getName();
-            state['parameters'] = this.model.getParameters().map((p) => {
-              return {name: p.getName(), id: p.getId()};
-            });
-            state['returnTypes'] = this.model.getReturnTypes();
-      
-            // Flag for deserialization.
-            state['createNewModel'] = true;
-          }
-      
-          return state;
-        },
-      
-        loadExtraState(state) {
-          const id = state['procedureId']
-          const map = this.workspace.getProcedureMap();
-      
-          if (map.has(id) && !state['createNewModel']) {
-            // Delete the existing model (created in init).
-            map.delete(this.model.getId());
-            // Grab a reference to the model we're supposed to reference.
-            this.model = map.get(id);
-            this.doProcedureUpdate();
-            return;
-          }
-      
-          // There is no existing procedure model (we are likely pasting), so
-          // generate it from JSON.
-          this.model
-              .setName(state['name'])
-              .setReturnTypes(state['returnTypes']);
-          for (const [i, param] of state['parameters'].entries()) {
-            this.model.insertParameter(
-                new ObservableParameterModel(
-                    this.workspace, param['name'], param['id']), i );
-          }
-          this.doProcedureUpdate();
-        },
-    
-    */
-
-    destroy: function () {
-      if (this.isInsertionMarker()) return;
-      try {
-        Blockly.getMainWorkspace().getProcedureMap().delete(this.model.getId());
-      }
-      catch (error) {
-        console.log(error)
-      }
-      this.doProcedureUpdate()
-    }
   };
 
   disableContextMenuOptions(Blockly)
