@@ -92,11 +92,6 @@ export const ProcedsBlocklyInit = (Blockly) => {
     isProcedureDef() {
       return true;
     },
-    getVarModels() {
-      // If your procedure references variables
-      // then you should return those models here.
-      return [];
-    },
   };
 
   disableContextMenuOptions(Blockly)
@@ -109,7 +104,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
   };
 
   Blockly.Blocks.procedures_callnoreturn.onchange = function () {
-    requiredAllInputs(this) // Input fields are added after instantiation 
+   // requiredAllInputs(this) // TODO: esto tiene que ver con los shadow blocks, hay un issue de esto
   };
 }
 
@@ -217,9 +212,9 @@ const addParameter = (self, Blockly, argName) => {
     }
   })
 
-  const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
+  const callers = () => Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
 
-  callers.forEach(caller => {
+  callers().forEach(caller => {
     caller.arguments_.push(name);
     caller.updateShape_()
   })
@@ -248,7 +243,7 @@ const addParameter = (self, Blockly, argName) => {
 
     self.arguments_[argsAmount] = newName;
 
-    callers.forEach(caller => {
+    callers().forEach(caller => {
       caller.arguments_ = caller.arguments_.map(argName => argName === oldName ? newName : argName)
       caller.updateShape_()
     })
