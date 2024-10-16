@@ -4,6 +4,69 @@ const PLUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2Dt
 const MINUS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAQAAAD2e2DtAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QA/4ePzL8AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAHdElNRQfhDAUCCi+xWH4JAAABcUlEQVR42u3c7ZGCMBSG0etuYcTKls7AyrSEVWd4+bjnUECMeSbhD6kCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIBzu4XHm2rUvPekD2yutR57/4itTLXU0/Pvs9SUW5TcDrDUyE3r9Na6ZwZKBWD5PxVKIBPAVGtknGsZibeBTADPyCjXE1idn8A0/gJjXFPgn0sEwIEljgAHwPc2Xx87QHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNCcAJoTQHMCaE4AzQmgOQE0J4DmBNDcb2SUsfc0T2re/utAO0BzPg49sot8HOoI+M5IDJIJ4OF+gI+F7gpyRcwxxa6Iyb0E3mvYB96y1kgtv2vijubS18QBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAWXq7xrTQhKAi3AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTEyLTA1VDAyOjEwOjQ3LTA1OjAwdZLI/gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNy0xMi0wNVQwMjoxMDo0Ny0wNTowMATPcEIAAAAASUVORK5CYII="
 const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAAmJLR0QAAKqNIzIAAAAJcEhZcwAACxMAAAsTAQCanBgAAAAHdElNRQfiBAUBKBeKSgeBAAABTElEQVQoz22QzyvDcRjHX5/vvrMyStI2uZgftdVCSpJCyW1y00oUF+Xg4OIkx5VyUyJOsgv/gnJw4YCSSFMyB5pGbLJ99/k8LltreB2f9+v50eOigoc5FvGTJF8pugCwaKaNaE98uf9zMBXwjtNpbvmuaH2B0+HXuuyMEbOlQ4U1M5ZVcYbowg02YfZW5cnE9JIROdI7jsiOacoMPLZdEYPR1ouQkxCRG+feESlIXkQOzLR+NhvCpc3UbPcHAoRsADcAQ0Twq0ZosQgEVY0SqvGpkAUCxkIUYRP4bZRRNi9pvaD+TwXyFseHuYzy/Kt8CWfQ5Ems6C/5y7uZyDEH0Nt8vq0dUx0XzaapPyIIoIi23+47+SrlTvrTjLhKy2wmO95OqiacS+QBH9gAFDlOZnYbrimWOixSZCwUlK+vZd7bXiPldyi0yqX1OtkfCBS/9XAtDKAAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDQtMDVUMDQ6NDQ6NDItMDM6MDD+uUN1AAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTA0LTA1VDA0OjQwOjIzLTAzOjAw5hdZgAAAAABJRU5ErkJggg=="
 
+// -----------------------
+// [!] Custom context menu
+// -----------------------
+
+const makeProcedureCustomMenu = (withParametersOptions = true) => {
+  return function (options) {
+    // Add options to create getters for each parameter.
+    if (!this.isCollapsed()) {
+      for (var i = this.arguments_.length - 1; i >= 0; i--) {
+        var option = { enabled: true };
+        var name = this.arguments_[i];
+        option.text = Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name);
+        option.callback = createParameterCaller(this, name);
+
+        options.unshift(option);
+      }
+    }
+
+    // Add option to create caller.
+    var option = { enabled: true };
+    var name = this.getFieldValue('NAME');
+    option.text = Blockly.Msg.PROCEDURES_CREATE_DO.replace('%1', name);
+    var xmlMutation = document.createElement('mutation');
+    xmlMutation.setAttribute('name', name);
+    for (var i = 0; i < this.arguments_.length; i++) {
+      var xmlArg = document.createElement('arg');
+      xmlArg.setAttribute('name', this.arguments_[i]);
+      xmlMutation.appendChild(xmlArg);
+    }
+    var xmlBlock = document.createElement('block', null, xmlMutation);
+    xmlBlock.setAttribute('type', this.callType_);
+    option.callback = Blockly.ContextMenu.callbackFactory(this, xmlBlock);
+    options.unshift(option); // [!]
+
+    options.pop(); // [!] Remove help
+  };
+};
+
+
+const makeProcedureDomToMutation = () => {
+  return function (xmlElement) {
+    this.arguments_ = [];
+    for (var i = 0, childNode; childNode = xmlElement.childNodes[i]; i++) {
+      if (childNode.nodeName.toLowerCase() == 'arg') {
+        this.arguments_.push(childNode.getAttribute('name'));
+      }
+    }
+
+    this.updateParams_();
+    Blockly.Procedures.mutateCallers(this);
+
+    // Show or hide the statement input.
+    this.setStatements_(xmlElement.getAttribute('statements') !== 'false');
+
+    this.arguments_.forEach(function (name, i) { // [!]
+      addParameter(this, i, name);
+    }.bind(this));
+  };
+}
+
+
+
+
 export const ProcedsBlocklyInit = (Blockly) => {
 
   Blockly.Blocks['procedures_defnoreturn'] = {
@@ -16,11 +79,43 @@ export const ProcedsBlocklyInit = (Blockly) => {
         Blockly.Msg.PROCEDURES_DEFNORETURN_TOOLTIP,
         Blockly.Msg.PROCEDURES_DEFNORETURN_HELPURL
       )
+
     },
     updateParams_: () => { },
-    /* customContextMenu: makeProcedureCustomMenu(),
-        domToMutation: makeProcedureDomToMutation(), */
+    customContextMenu: makeProcedureCustomMenu(),
+    domToMutation: makeProcedureDomToMutation(), 
+
+    getProcedureDef: function () {
+      return [this.getFieldValue('NAME'), this.arguments_, false];
+    },
+
+    isProcedureDef() {
+      return true;
+    },
   };
+
+  disableContextMenuOptions(Blockly)
+
+  let init_base_callnoreturn = Blockly.Blocks.procedures_callnoreturn.init;
+
+  Blockly.Blocks.procedures_callnoreturn.init = function () {
+    this.setInputsInline(true);
+    init_base_callnoreturn.call(this);
+  };
+
+  Blockly.Blocks.procedures_callnoreturn.onchange = function () {
+   // requiredAllInputs(this) // TODO: esto tiene que ver con los shadow blocks, hay un issue de esto
+  };
+}
+
+const disableContextMenuOptions = (Blockly) => {
+  const helpOption = Blockly.ContextMenuRegistry.registry.getItem('blockHelp')
+  const duplicateOption = Blockly.ContextMenuRegistry.registry.getItem('blockDuplicate')
+  const disableOption = Blockly.ContextMenuRegistry.registry.getItem('blockDisable')
+
+  disableOption.preconditionFn = () => 'disable'
+  duplicateOption.preconditionFn = () => 'disable'
+  helpOption.preconditionFn = () => 'disabled'
 
 }
 
@@ -28,12 +123,14 @@ export const allProcedures = (workspace) => workspace.getAllBlocks().filter(isPr
 
 const getName = (procedureBlock) => procedureBlock.getFieldValue('NAME')
 
-const isProcedure = (block) => block.type === 'Procedimiento'
+const isProcedure = (block) => block.type === 'procedures_defnoreturn'
 
 export const allProcedureNames = (workspace) => allProcedures(workspace).map(getName)
 
-//TODO no anda
-const findLegalName = (name, block, index) => allProcedureNames(block.workspace).includes(name) ? findLegalName(name + " " + index, block, index + 1) : name
+export const findLegalName = (name, block, index, workspace) => {
+  const newName = index === 0 ? name : (name + index)
+  return allProcedureNames(workspace).includes(newName) ? findLegalName(name, block, index + 1, workspace) : newName;
+}
 
 const makeProcedureInit = (
   Blockly,
@@ -45,8 +142,7 @@ const makeProcedureInit = (
   tooltip,
   helpUrl,
 ) => {
-
-  var defaultLegalName = findLegalName(defaultName, block, 1);
+  var defaultLegalName = Blockly.Procedures.findLegalName(defaultName, block);
   var nameField = new Blockly.FieldTextInput(defaultLegalName, Blockly.Procedures.rename);
   nameField.setSpellcheck(false);
 
@@ -99,16 +195,26 @@ const getAvailableName = (block, name) => {
 }
 
 const addParameter = (self, Blockly, argName) => {
+
   const argsAmount = self.arguments_.length
   const defaultName = argName || Blockly.Msg.PROCEDURES_PARAMETER + " " + (argsAmount + 1);
   const name = getAvailableName(self, defaultName);
   const id = "INPUTARG" + argsAmount;
 
   self.arguments_.push(name);
-  //self.updateParams_();
+  self.updateParams_();
 
-  const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
-  callers.forEach(caller => {
+  var blocks = self.workspace.getAllBlocks();
+  blocks.forEach(block => {
+    if (block.type === self.callType_ && block.getProcedureCall() === self.getProcedureDef()[0]) {
+      block.arguments_.push(name);
+      block.updateShape_();
+    }
+  })
+
+  const callers = () => Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
+
+  callers().forEach(caller => {
     caller.arguments_.push(name);
     caller.updateShape_()
   })
@@ -118,7 +224,7 @@ const addParameter = (self, Blockly, argName) => {
     16,
     16,
     Blockly.Msg.VARIABLES_SET_CREATE_GET.replace('%1', name),
-    () => createParameterCaller(self, self.arguments_[argsAmount])()
+    () => createParameterCaller(self, self.arguments_[argsAmount], Blockly)
   )
 
   const removeParameterButton = new Blockly.FieldImage(
@@ -137,20 +243,19 @@ const addParameter = (self, Blockly, argName) => {
 
     self.arguments_[argsAmount] = newName;
 
-    callers.forEach(caller => {
+    callers().forEach(caller => {
       caller.arguments_ = caller.arguments_.map(argName => argName === oldName ? newName : argName)
       caller.updateShape_()
     })
 
-    /*     }
-    TODO: this changes the argument blocks when the name of the argument changes
-        const varBlocks = self.workspace.getAllBlocks().filter(block.type === "variables_get" && block.$parent === self.id)
-        varBlocks.forEach(varBlock => {
-          var varField = varBlock.getField("VAR");
-          if (varField.getValue() === oldName) {
-            varField.setValue(newName);
-          }
-        }) */
+    const varBlocks = self.workspace.getAllBlocks().filter(block => block.type === "variables_get" && block.$parent === self.id)
+
+    varBlocks.forEach(varBlock => {
+      var varField = varBlock.getField("VAR");
+      if (varField.getValue() === oldName) {
+        varField.setValue(newName)
+      }
+    })
 
     return newName;
   });
@@ -167,26 +272,100 @@ const addParameter = (self, Blockly, argName) => {
 }
 
 const removeParameter = (self, argsAmount, Blockly) => {
+
   let arguments_ = self.arguments_
   self.arguments_.forEach((_, i) => self.removeInput("INPUTARG" + i))
   self.arguments_ = []
   arguments_.splice(argsAmount, 1)
 
-  arguments_.forEach(arg => addParameter(self, Blockly, arg))
-
   const callers = Blockly.Procedures.getCallers(self.getFieldValue('NAME'), self.workspace);
   callers.forEach(block => {
-    block.arguments_.splice(argsAmount, 1);
+    block.arguments_ = []
     block.updateShape_();
   })
-
+  arguments_.forEach(arg => addParameter(self, Blockly, arg))
 }
 
+const createCallerXml = (block) => {
+  var name = block.getFieldValue('NAME');
+  var xmlMutation = document.createElement('mutation');
+  xmlMutation.setAttribute('name', name);
+
+  block.arguments_.forEach((_, i) => {
+    var xmlArg = document.createElement('arg');
+    xmlArg.setAttribute('name', block.arguments_[i]);
+    xmlMutation.appendChild(xmlArg);
+  })
+
+  var xmlBlock = document.createElement('block');
+  xmlBlock.appendChild(xmlMutation);
+
+  xmlBlock.setAttribute('type', 'procedures_callnoreturn');
+  return xmlBlock
+}
 
 const createCall = (self, Blockly) => {
-  console.log("create call")
+
+  const block = callbackFactory(self, createCallerXml(self), Blockly)
+
+  try {
+    const procedureBlock = self;
+
+    Blockly.Events.disabled_ = 1;
+    const posParent = procedureBlock.getRelativeToSurfaceXY();
+    const pos = block.getRelativeToSurfaceXY();
+    let width = procedureBlock.width;
+
+    block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+  } finally {
+    Blockly.Events.disabled_ = 0;
+  }
 }
 
-const createParameterCaller = (procedureBlock, name) => {
-  console.log("create parameter call")
+const callbackFactory = (block, xml, Blockly) => {
+  Blockly.Events.disable();
+  try {
+    var newBlock = Blockly.Xml.domToBlock(xml, block.workspace);
+    // Move the new block next to the old block.
+    var xy = block.getRelativeToSurfaceXY();
+    if (block.RTL) {
+      xy.x -= Blockly.SNAP_RADIUS;
+    } else {
+      xy.x += Blockly.SNAP_RADIUS;
+    }
+    xy.y += Blockly.SNAP_RADIUS * 2;
+    newBlock.moveBy(xy.x, xy.y);
+  } finally {
+    Blockly.Events.enable();
+  }
+
+  newBlock.select();
+
+  return newBlock;
+};
+
+const createParameterCaller = (procedureBlock, name, Blockly) => {
+  var xmlField = document.createElement('field')
+  xmlField.textContent = name;
+
+  xmlField.setAttribute('name', 'VAR')
+
+  var xmlBlock = document.createElement('block')
+  xmlBlock.appendChild(xmlField)
+  xmlBlock.setAttribute('type', 'variables_get')
+
+  var block = callbackFactory(procedureBlock, xmlBlock, Blockly);
+  block.$parent = procedureBlock.id;
+
+  try {
+    Blockly.Events.disabled_ = 1;
+    const posParent = procedureBlock.getRelativeToSurfaceXY();
+    const pos = block.getRelativeToSurfaceXY();
+    let width = procedureBlock.width;
+
+    block.moveBy(posParent.x - pos.x + width + 16, posParent.y - pos.y + 6);
+  } finally {
+    Blockly.Events.disabled_ = 0;
+  }
+
 }
