@@ -83,7 +83,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
     },
     updateParams_: () => { },
     customContextMenu: makeProcedureCustomMenu(),
-    domToMutation: makeProcedureDomToMutation(), 
+    domToMutation: makeProcedureDomToMutation(),
 
     getProcedureDef: function () {
       return [this.getFieldValue('NAME'), this.arguments_, false];
@@ -92,6 +92,9 @@ export const ProcedsBlocklyInit = (Blockly) => {
     isProcedureDef() {
       return true;
     },
+    getVars() {
+      return this.arguments_;
+    }
   };
 
   disableContextMenuOptions(Blockly)
@@ -104,7 +107,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
   };
 
   Blockly.Blocks.procedures_callnoreturn.onchange = function () {
-   // requiredAllInputs(this) // TODO: esto tiene que ver con los shadow blocks, hay un issue de esto
+    // requiredAllInputs(this) // TODO: esto tiene que ver con los shadow blocks, hay un issue de esto
   };
 }
 
