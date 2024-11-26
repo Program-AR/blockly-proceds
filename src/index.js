@@ -1,7 +1,7 @@
 import 'blockly/blocks';
 import { makeProcedureInit, makeProcedureCustomMenu, makeProcedureDomToMutation, disableContextMenuOptions } from './procedures';
 
-export const ProcedsBlocklyInit = (Blockly) => {
+export const procedsBlocklyInit = (Blockly) => {
 
   Blockly.Blocks['procedures_defnoreturn'] = {
     init: function () {
@@ -45,7 +45,7 @@ export const ProcedsBlocklyInit = (Blockly) => {
   };
 }
 
-export const setDefaultLocale = () => {
+export const setDefaultLocale = (Blockly) => {
   Blockly.Msg.PROCEDURES_DEFNORETURN_COMMENT = 'Describe el procedimiento...';
   Blockly.Msg.PROCEDURES_DEFNORETURN_PROCEDURE = "Hacer algo";
   Blockly.Msg.PROCEDURES_DEFNORETURN_TITLE = "Definir";

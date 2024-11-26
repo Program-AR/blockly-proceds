@@ -1,6 +1,6 @@
 {
   "name": "blockly-proceds",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A Blockly plugin.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
