@@ -1,6 +1,6 @@
 {
   "name": "blockly-proceds",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "A Blockly plugin.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -21,19 +21,15 @@
     "my-plugin"
   ],
   "types": "src/index.d.ts",
-  "homepage": "git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
-  "bugs": {
-    "url": "git@github.com:Program-AR/blockly-proceds/issues"
-  },
+  "homepage": "http://git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Program-AR/blockly-proceds.git",
+    "url": "git+ssh://git@github.com/Program-AR/blockly-proceds.git",
     "directory": "my-plugin"
   },
   "license": "Apache-2.0",
   "directories": {
-    "dist": "dist",
-    "src": "src"
+    "test": "test"
   },
   "files": [
     "dist",
