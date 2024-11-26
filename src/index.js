@@ -8,7 +8,7 @@ const HAND = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfq
 // [!] Custom context menu
 // -----------------------
 
-const makeProcedureCustomMenu = (withParametersOptions = true) => {
+const makeProcedureCustomMenu = () => {
   return function (options) {
     // Add options to create getters for each parameter.
     if (!this.isCollapsed()) {

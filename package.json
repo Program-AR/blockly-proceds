@@ -20,6 +20,7 @@
     "blockly-plugin",
     "my-plugin"
   ],
+  "types": "src/index.d.ts",
   "homepage": "git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
   "bugs": {
     "url": "git@github.com:Program-AR/blockly-proceds/issues"
