@@ -1,6 +1,6 @@
 {
   "name": "blockly-proceds",
-  "version": "1.0.10",
+  "version": "1.0.15",
   "description": "A Blockly plugin.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -9,11 +9,12 @@
     "lint": "blockly-scripts lint",
     "predeploy": "blockly-scripts predeploy",
     "start": "blockly-scripts start",
-    "test": "blockly-scripts test"
+    "test": "blockly-scripts test",
+    "prepublishOnly": "npm run build"
   },
-  "main": "./src/index.js",
-  "module": "./src/index.js",
-  "unpkg": "./src/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "unpkg": "./dist/index.js",
   "author": "",
   "keywords": [
     "blockly",
@@ -32,21 +33,18 @@
     "test": "test"
   },
   "files": [
+    "dist", 
     "src"
   ],
   "devDependencies": {
     "@blockly/dev-scripts": "^4.0.1",
-    "@blockly/dev-tools": "^8.0.2",
-    "blockly": "^11.1.1"
+    "blockly": "^10.4.3"
   },
   "peerDependencies": {
-    "blockly": "^11.1.1"
+    "blockly": "^10.4.3"
   },
   "publishConfig": {},
   "eslintConfig": {
     "extends": "@blockly/eslint-config"
-  },
-  "dependencies": {
-    "@blockly/block-shareable-procedures": "^5.0.5"
   }
 }
