@@ -18,4 +18,4 @@ If you desire to use a different language than Spanish,  you can define your own
 Blockly.Msg.PROCEDURES_DEFNORETURN_COMMENT = 'your translation';
 ```
 
-Then proceed to call `ProcedsBlocklyInit()` to load these new translations. Otherwise, you can use the default language by calling `setDefacultLocale()`:
+Then proceed to call `procedsBlocklyInit()` to load these new translations. Otherwise, you can use the default language by calling `setDefacultLocale()`:
