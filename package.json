@@ -1,6 +1,6 @@
 {
   "name": "blockly-proceds",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "A Blockly plugin.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -11,9 +11,9 @@
     "start": "blockly-scripts start",
     "test": "blockly-scripts test"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "unpkg": "./dist/index.js",
+  "main": "./src/index.js",
+  "module": "./src/index.js",
+  "unpkg": "./src/index.js",
   "author": "",
   "keywords": [
     "blockly",
@@ -32,7 +32,6 @@
     "test": "test"
   },
   "files": [
-    "dist",
     "src"
   ],
   "devDependencies": {
