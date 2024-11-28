@@ -1,6 +1,6 @@
 {
   "name": "blockly-proceds",
-  "version": "1.0.0",
+  "version": "1.0.15",
   "description": "A Blockly plugin.",
   "scripts": {
     "audit:fix": "blockly-scripts auditFix",
@@ -9,10 +9,11 @@
     "lint": "blockly-scripts lint",
     "predeploy": "blockly-scripts predeploy",
     "start": "blockly-scripts start",
-    "test": "blockly-scripts test"
+    "test": "blockly-scripts test",
+    "prepublishOnly": "npm run build"
   },
   "main": "./dist/index.js",
-  "module": "./src/index.js",
+  "module": "./dist/index.js",
   "unpkg": "./dist/index.js",
   "author": "",
   "keywords": [
@@ -20,31 +21,27 @@
     "blockly-plugin",
     "my-plugin"
   ],
-  "homepage": "git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
-  "bugs": {
-    "url": "git@github.com:Program-AR/blockly-proceds/issues"
-  },
+  "types": "src/index.d.ts",
+  "homepage": "http://git@github.com:Program-AR/blockly-proceds/tree/master/my-plugin#readme",
   "repository": {
     "type": "git",
-    "url": "git@github.com:Program-AR/blockly-proceds.git",
+    "url": "git+ssh://git@github.com/Program-AR/blockly-proceds.git",
     "directory": "my-plugin"
   },
   "license": "Apache-2.0",
   "directories": {
-    "dist": "dist",
-    "src": "src"
+    "test": "test"
   },
   "files": [
-    "dist",
+    "dist", 
     "src"
   ],
   "devDependencies": {
-    "blockly": "^11.1.1",
     "@blockly/dev-scripts": "^4.0.1",
-    "@blockly/dev-tools": "^8.0.2"
+    "blockly": "^10.4.3"
   },
   "peerDependencies": {
-    "blockly": "^11.1.1"
+    "blockly": "^10.4.3"
   },
   "publishConfig": {},
   "eslintConfig": {
