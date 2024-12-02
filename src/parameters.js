@@ -45,6 +45,8 @@ export const addParameter = (self, Blockly, argName) => {
     )
 
     const nameField = new Blockly.FieldTextInput(name, function (newName) {
+        if(!newName) newName = "_"
+        
         const oldName = self.arguments_[argsAmount];
 
         if (oldName !== newName)
